@@ -2,12 +2,31 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/UM.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>IBIS Lab Dashboard</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      (function () {
+        var img = new Image();
+        img.onload = function () {
+          var size = 64;
+          var canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          var ctx = canvas.getContext('2d');
+          var dim = Math.min(img.width, img.height);
+          var sx = (img.width - dim) / 2;
+          var sy = (img.height - dim) / 2;
+          ctx.drawImage(img, sx, sy, dim, dim, 0, 0, size, size);
+          var link = document.querySelector("link[rel~='icon']");
+          if (link) link.href = canvas.toDataURL('image/png');
+        };
+        img.src = '/UM.png';
+      })();
+    </script>
   </body>
 </html>
