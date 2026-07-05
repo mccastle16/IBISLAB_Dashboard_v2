@@ -1,0 +1,43 @@
+.turns-section {
+  text-align: left;
+}
+
+.turns-section h3 {
+  font-size: 18px;
+  color: var(--text-h);
+  margin: 0 0 16px;
+}
+
+.turns-section__tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.turns-section__tabs button {
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.turns-section__tabs button.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.turns-panel__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.turns-section__warning {
+  color: var(--text);
+  font-size: 14px;
+}

@@ -1,61 +1,79 @@
-from fastapi import FastAPI, Request
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+"""
+IBIS Dashboard API
+------------------
+Accepts an uploaded transcript spreadsheet (.csv/.xlsx/.xls) and returns
+MLU and conversational-turn metrics computed by the services/ pipelines.
+"""
 
-app = FastAPI()
+import threading
 
-app.mount("/static", StaticFiles(directory="../frontend"), name="static")
-templates = Jinja2Templates(directory="../templates")
-posts: list[dict] = [
-    {
-        "id": 1,
-        "author": "Corey Schafer",
-        "title": "FastAPI is Awesome",
-        "content": "This framework is really easy to use and super fast.",
-        "date_posted": "April 20, 2025",
-    },
-    {
-        "id": 2,
-        "author": "Jane Doe",
-        "title": "Python is Great for Web Development",
-        "content": "Python is a great language for web development, and FastAPI makes it even better.",
-        "date_posted": "April 21, 2025",
-    },
-    {
-        "id": 3,
-        "author": "Alex Rivera",
-        "title": "Getting Started with Pydantic",
-        "content": "Pydantic makes data validation in Python clean and simple. Here's how to get started.",
-        "date_posted": "April 22, 2025",
-    },
-    {
-        "id": 4,
-        "author": "Maria Chen",
-        "title": "SQLAlchemy and FastAPI: A Perfect Pair",
-        "content": "Combining SQLAlchemy with FastAPI gives you a powerful and flexible backend stack.",
-        "date_posted": "April 23, 2025",
-    },
-    {
-        "id": 5,
-        "author": "James Okafor",
-        "title": "Async Programming in Python",
-        "content": "Understanding async and await in Python is key to building high-performance APIs.",
-        "date_posted": "April 24, 2025",
-    },
-    {
-        "id": 6,
-        "author": "Priya Nair",
-        "title": "Deploying FastAPI with Docker",
-        "content": "Containerizing your FastAPI app with Docker makes deployment consistent and reproducible.",
-        "date_posted": "April 25, 2025",
-    },
-]
+import spacy
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 
-@app.get("/", include_in_schema=False, name = "home")
-@app.get("/posts", include_in_schema=False, name="posts")
-def home(request: Request):
-    return templates.TemplateResponse(request, "home.html", {"posts": posts, "title": "Home"})
+from services.analysis import AnalysisError, analyze_file
 
-@app.get("/api/posts")
-def get_posts():
-    return posts
+app = FastAPI(title="IBIS Dashboard API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+_nlp = None
+_whisper_model = None
+_whisper_lock = threading.Lock()
+_whisper_load_error = None
+
+
+@app.on_event("startup")
+def load_spacy_model():
+    """
+    Rule-based sentence splitting (blank pipeline + sentencizer), not the
+    trained en_core_web_sm model: the transcripts this app processes are
+    already stripped down to letters/digits/.?!' by preprocessing.clean_sentences,
+    so punctuation-based splitting is sufficient and it keeps the app free of
+    an external model download at startup.
+    """
+    global _nlp
+    _nlp = spacy.blank("en")
+    _nlp.add_pipe("sentencizer")
+
+
+def get_whisper_model():
+    """Lazily load the sentence-transformers model on first use (heavy import)."""
+    global _whisper_model, _whisper_load_error
+    if _whisper_model is not None or _whisper_load_error is not None:
+        return _whisper_model
+    with _whisper_lock:
+        if _whisper_model is None and _whisper_load_error is None:
+            try:
+                from sentence_transformers import SentenceTransformer
+
+                _whisper_model = SentenceTransformer("all-MiniLM-L6-v2")
+            except Exception as exc:  # model/deps unavailable
+                _whisper_load_error = str(exc)
+    return _whisper_model
+
+
+@app.get("/api/health")
+def health():
+    return {"status": "ok", "spacyLoaded": _nlp is not None}
+
+
+@app.post("/api/analyze")
+async def analyze(file: UploadFile = File(...), method: str = Form("naive")):
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+    whisper_model = get_whisper_model() if method in ("whisper", "both") else None
+
+    try:
+        result = analyze_file(file.filename, content, method, _nlp, whisper_model)
+    except AnalysisError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return result

@@ -1,0 +1,42 @@
+.results-view {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  text-align: left;
+}
+
+.results-view__file-info h2 {
+  font-size: 20px;
+  margin: 0 0 6px;
+  color: var(--text-h);
+  font-family: var(--mono);
+  word-break: break-all;
+}
+
+.results-view__file-info p {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.results-view__file-info code {
+  font-size: 13px;
+}
+
+.results-view__warnings {
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.results-view__warnings p {
+  font-size: 13px;
+  color: var(--text-h);
+  margin: 0;
+}
+
+.results-view__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
