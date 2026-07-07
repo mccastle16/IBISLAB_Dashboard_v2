@@ -1,61 +1,62 @@
-from fastapi import FastAPI, Request
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+import uuid
 
-app = FastAPI()
+from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 
-app.mount("/static", StaticFiles(directory="../frontend"), name="static")
-templates = Jinja2Templates(directory="../templates")
-posts: list[dict] = [
-    {
-        "id": 1,
-        "author": "Corey Schafer",
-        "title": "FastAPI is Awesome",
-        "content": "This framework is really easy to use and super fast.",
-        "date_posted": "April 20, 2025",
-    },
-    {
-        "id": 2,
-        "author": "Jane Doe",
-        "title": "Python is Great for Web Development",
-        "content": "Python is a great language for web development, and FastAPI makes it even better.",
-        "date_posted": "April 21, 2025",
-    },
-    {
-        "id": 3,
-        "author": "Alex Rivera",
-        "title": "Getting Started with Pydantic",
-        "content": "Pydantic makes data validation in Python clean and simple. Here's how to get started.",
-        "date_posted": "April 22, 2025",
-    },
-    {
-        "id": 4,
-        "author": "Maria Chen",
-        "title": "SQLAlchemy and FastAPI: A Perfect Pair",
-        "content": "Combining SQLAlchemy with FastAPI gives you a powerful and flexible backend stack.",
-        "date_posted": "April 23, 2025",
-    },
-    {
-        "id": 5,
-        "author": "James Okafor",
-        "title": "Async Programming in Python",
-        "content": "Understanding async and await in Python is key to building high-performance APIs.",
-        "date_posted": "April 24, 2025",
-    },
-    {
-        "id": 6,
-        "author": "Priya Nair",
-        "title": "Deploying FastAPI with Docker",
-        "content": "Containerizing your FastAPI app with Docker makes deployment consistent and reproducible.",
-        "date_posted": "April 25, 2025",
-    },
-]
+from metrics import MetricsError, compute_report, parse_workbook, sessions_to_csv
 
-@app.get("/", include_in_schema=False, name = "home")
-@app.get("/posts", include_in_schema=False, name="posts")
-def home(request: Request):
-    return templates.TemplateResponse(request, "home.html", {"posts": posts, "title": "Home"})
+app = FastAPI(title="IBIS Lab Dashboard API")
 
-@app.get("/api/posts")
-def get_posts():
-    return posts
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8000", "http://127.0.0.1:8000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# In-memory store: fine for a single-process lab tool, resets on restart.
+REPORTS: dict[str, dict] = {}
+
+MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+
+
+@app.post("/api/upload")
+async def upload_workbook(file: UploadFile):
+    if not file.filename.lower().endswith((".xlsx", ".xls")):
+        raise HTTPException(400, "Please upload a .xlsx or .xls file.")
+
+    contents = await file.read()
+    if len(contents) > MAX_UPLOAD_BYTES:
+        raise HTTPException(400, "File is larger than 25MB.")
+
+    try:
+        df = parse_workbook(contents)
+        report = compute_report(df, file.filename)
+    except MetricsError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+    report_id = uuid.uuid4().hex
+    REPORTS[report_id] = report
+    return {"report_id": report_id, **report}
+
+
+@app.get("/api/report/{report_id}")
+def get_report(report_id: str):
+    report = REPORTS.get(report_id)
+    if report is None:
+        raise HTTPException(404, "Report not found. It may have expired if the server restarted.")
+    return {"report_id": report_id, **report}
+
+
+@app.get("/api/report/{report_id}/export")
+def export_report(report_id: str):
+    report = REPORTS.get(report_id)
+    if report is None:
+        raise HTTPException(404, "Report not found. It may have expired if the server restarted.")
+    csv_text = sessions_to_csv(report)
+    return PlainTextResponse(
+        csv_text,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{report_id}_sessions.csv"'},
+    )
