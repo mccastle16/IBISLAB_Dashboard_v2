@@ -5,7 +5,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+<<<<<<< Updated upstream
     port: 8000,
+=======
+    port: 8080,
+>>>>>>> Stashed changes
     proxy: {
       '/api': 'http://127.0.0.1:8001',
     },
