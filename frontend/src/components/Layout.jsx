@@ -19,7 +19,7 @@ export default function Layout() {
     <div className="shell">
       <header className="topbar">
         <NavLink to="/" className="brand" onClick={() => setOpen(false)}>
-          <img className="brand-mark" src="/favicon.svg" alt="" width="28" height="27" />
+          <img className="brand-mark" src="/UM.png" alt="University of Miami" />
           <span className="brand-text">
             IBIS Lab
             <span className="brand-sub">Dashboard</span>
