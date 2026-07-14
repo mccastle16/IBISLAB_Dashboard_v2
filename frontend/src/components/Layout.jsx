@@ -4,6 +4,7 @@ import './Layout.css'
 
 const NAV_LINKS = [
   { to: '/', label: 'Home', end: true },
+  { to: '/upload', label: 'Upload', end: false },
   { to: '/overview', label: 'Overview', end: false },
 ]
 

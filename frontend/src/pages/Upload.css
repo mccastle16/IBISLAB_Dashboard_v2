@@ -1,0 +1,143 @@
+.upload-page {
+  display: flex;
+  flex-direction: column;
+}
+
+.upload-hero {
+  padding: 72px 32px 8px;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+
+  @media (max-width: 720px) {
+    padding: 40px 20px 8px;
+  }
+}
+
+.upload-hero h1 {
+  margin: 0 0 16px;
+}
+
+.upload-hero .lede {
+  max-width: 46ch;
+  margin: 0 auto;
+}
+
+.upload-section {
+  padding: 40px 32px 96px;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (max-width: 720px) {
+    padding: 24px 20px 56px;
+  }
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  min-height: 220px;
+  padding: 40px 24px;
+  border-radius: 16px;
+  border: 2px dashed var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.dropzone * {
+  pointer-events: none;
+}
+
+.dropzone:hover,
+.dropzone:focus-visible {
+  border-color: var(--brand-green);
+}
+
+.dropzone:focus-visible {
+  outline: 2px solid var(--brand-green);
+  outline-offset: 3px;
+}
+
+.dropzone--dragging {
+  border-color: var(--brand-green);
+  background: color-mix(in srgb, var(--brand-green) 6%, var(--surface));
+}
+
+.dropzone--uploading {
+  cursor: wait;
+  border-color: var(--line);
+}
+
+.dropzone--success {
+  border-style: solid;
+  border-color: var(--good);
+  background: color-mix(in srgb, var(--good) 8%, var(--surface));
+}
+
+.dropzone-icon {
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.dropzone-icon--success {
+  color: var(--good);
+}
+
+.dropzone-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.dropzone-sub {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.dropzone-spinner {
+  width: 26px;
+  height: 26px;
+  margin-bottom: 6px;
+  border-radius: 50%;
+  border: 3px solid var(--line);
+  border-top-color: var(--brand-green);
+  animation: dropzone-spin 0.8s linear infinite;
+}
+
+@keyframes dropzone-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.upload-error {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--critical) 8%, var(--surface));
+  color: var(--critical);
+  font-size: 14px;
+}
+
+.upload-actions {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.upload-hint {
+  font-size: 14px;
+  color: var(--muted);
+}

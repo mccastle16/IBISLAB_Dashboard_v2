@@ -92,8 +92,8 @@ export default function Home() {
             communicate, learn, and connect.
           </p>
           <div className="hero-actions">
-            <Link to="/overview" className="btn btn-primary">
-              Open Overview
+            <Link to="/upload" className="btn btn-primary">
+              Upload a file
             </Link>
             <a href="#features" className="btn btn-ghost">
               See what it tracks
@@ -166,9 +166,9 @@ export default function Home() {
 
       <section className="cta">
         <h2>Ready to look at the data?</h2>
-        <p>Jump into the Overview workspace to explore current metrics.</p>
-        <Link to="/overview" className="btn btn-primary">
-          Open Overview
+        <p>Upload a session file to get started.</p>
+        <Link to="/upload" className="btn btn-primary">
+          Upload a file
         </Link>
       </section>
     </div>
