@@ -1,25 +1,58 @@
-import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import './Layout.css'
+
+const NAV_LINKS = [
+  { to: '/', label: 'Home', end: true },
+  { to: '/overview', label: 'Overview', end: false },
+]
+
 export default function Layout() {
   const [open, setOpen] = useState(false)
+  const location = useLocation()
+
+  useEffect(() => {
+    setOpen(false)
+  }, [location.pathname])
 
   return (
-    <div className="layout">
-      <button
-        className="menu-toggle"
-        onClick={() => setOpen(o => !o)}
-        aria-label="Toggle menu"
-      >
-        <span />
-        <span />
-        <span />
-      </button>
+    <div className="shell">
+      <header className="topbar">
+        <NavLink to="/" className="brand" onClick={() => setOpen(false)}>
+          <img className="brand-mark" src="/favicon.svg" alt="" width="28" height="27" />
+          <span className="brand-text">
+            IBIS Lab
+            <span className="brand-sub">Dashboard</span>
+          </span>
+        </NavLink>
 
-      {open && <div className="sidebar-backdrop" onClick={() => setOpen(false)} />}
+        <nav className="topnav" aria-label="Primary">
+          {NAV_LINKS.map(({ to, label, end }) => (
+            <NavLink key={to} to={to} end={end}>
+              {label}
+            </NavLink>
+          ))}
+        </nav>
 
-      <nav className={`sidebar ${open ? 'sidebar--open' : ''}`}>
-        <NavLink to="/" end onClick={() => setOpen(false)}>Home</NavLink>
-        <NavLink to="/overview" onClick={() => setOpen(false)}>Overview</NavLink>
+        <button
+          type="button"
+          className={`menu-toggle ${open ? 'menu-toggle--open' : ''}`}
+          onClick={() => setOpen((o) => !o)}
+          aria-label="Toggle menu"
+          aria-expanded={open}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+      </header>
+
+      <nav className={`mobile-nav ${open ? 'mobile-nav--open' : ''}`} aria-label="Mobile">
+        {NAV_LINKS.map(({ to, label, end }) => (
+          <NavLink key={to} to={to} end={end} onClick={() => setOpen(false)}>
+            {label}
+          </NavLink>
+        ))}
       </nav>
 
       <main className="page-content">
