@@ -1,4 +1,6 @@
+import json
 import uuid
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,10 +17,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# In-memory store: fine for a single-process lab tool, resets on restart.
-REPORTS: dict[str, dict] = {}
+# Uploaded workbooks and their computed reports are persisted to disk so a
+# report link keeps working (and shows the same output) across server
+# restarts, until the user uploads something new.
+DATA_DIR = Path(__file__).parent / "data"
+UPLOADS_DIR = DATA_DIR / "uploads"
+REPORTS_DIR = DATA_DIR / "reports"
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+
+REPORTS: dict[str, dict] = {}
+for report_file in REPORTS_DIR.glob("*.json"):
+    with report_file.open(encoding="utf-8") as f:
+        REPORTS[report_file.stem] = json.load(f)
 
 
 @app.post("/api/upload")
@@ -38,6 +51,11 @@ async def upload_workbook(file: UploadFile):
 
     report_id = uuid.uuid4().hex
     REPORTS[report_id] = report
+
+    ext = Path(file.filename).suffix
+    (UPLOADS_DIR / f"{report_id}{ext}").write_bytes(contents)
+    (REPORTS_DIR / f"{report_id}.json").write_text(json.dumps(report), encoding="utf-8")
+
     return {"report_id": report_id, **report}
 
 

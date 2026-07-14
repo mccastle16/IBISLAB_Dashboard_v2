@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 backend/.venv/
+backend/data/uploads/*
+backend/data/reports/*
+!backend/data/uploads/.gitkeep
+!backend/data/reports/.gitkeep

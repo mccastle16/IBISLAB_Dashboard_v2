@@ -14,8 +14,8 @@ from collections import OrderedDict
 
 import pandas as pd
 
-SPEAKER_ALIASES = ["speaker", "participant", "role", "tier", "speaker_id"]
-UTTERANCE_ALIASES = ["utterance", "transcript", "text", "line", "utterance_text"]
+SPEAKER_ALIASES = ["speaker", "Speaker (FEM, CHI, MAL)", "participant", "role", "tier", "speaker_id"]
+UTTERANCE_ALIASES = ["sentence","utterance", "transcript", "text", "line", "utterance_text"]
 SESSION_ALIASES = ["session", "session_id", "sessionid", "visit", "visit_number"]
 DATE_ALIASES = ["date", "session_date", "visit_date"]
 MORPHEME_ALIASES = ["morphemes", "morpheme_count", "mor_count", "morpheme"]
@@ -34,8 +34,9 @@ def _normalize(name: str) -> str:
 
 def _find_column(columns_by_norm: dict, aliases: list[str]) -> str | None:
     for alias in aliases:
-        if alias in columns_by_norm:
-            return columns_by_norm[alias]
+        norm_alias = _normalize(alias)
+        if norm_alias in columns_by_norm:
+            return columns_by_norm[norm_alias]
     return None
 
 
