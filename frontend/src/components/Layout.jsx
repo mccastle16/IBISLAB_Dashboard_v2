@@ -11,6 +11,7 @@ const NAV_LINKS = [
 export default function Layout() {
   const [open, setOpen] = useState(false)
   const location = useLocation()
+  const isHome = location.pathname === '/'
 
   useEffect(() => {
     setOpen(false)
@@ -27,34 +28,40 @@ export default function Layout() {
           </span>
         </NavLink>
 
-        <nav className="topnav" aria-label="Primary">
+        {!isHome && (
+          <>
+            <nav className="topnav" aria-label="Primary">
+              {NAV_LINKS.map(({ to, label, end }) => (
+                <NavLink key={to} to={to} end={end}>
+                  {label}
+                </NavLink>
+              ))}
+            </nav>
+
+            <button
+              type="button"
+              className={`menu-toggle ${open ? 'menu-toggle--open' : ''}`}
+              onClick={() => setOpen((o) => !o)}
+              aria-label="Toggle menu"
+              aria-expanded={open}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+          </>
+        )}
+      </header>
+
+      {!isHome && (
+        <nav className={`mobile-nav ${open ? 'mobile-nav--open' : ''}`} aria-label="Mobile">
           {NAV_LINKS.map(({ to, label, end }) => (
-            <NavLink key={to} to={to} end={end}>
+            <NavLink key={to} to={to} end={end} onClick={() => setOpen(false)}>
               {label}
             </NavLink>
           ))}
         </nav>
-
-        <button
-          type="button"
-          className={`menu-toggle ${open ? 'menu-toggle--open' : ''}`}
-          onClick={() => setOpen((o) => !o)}
-          aria-label="Toggle menu"
-          aria-expanded={open}
-        >
-          <span />
-          <span />
-          <span />
-        </button>
-      </header>
-
-      <nav className={`mobile-nav ${open ? 'mobile-nav--open' : ''}`} aria-label="Mobile">
-        {NAV_LINKS.map(({ to, label, end }) => (
-          <NavLink key={to} to={to} end={end} onClick={() => setOpen(false)}>
-            {label}
-          </NavLink>
-        ))}
-      </nav>
+      )}
 
       <main className="page-content">
         <Outlet />
